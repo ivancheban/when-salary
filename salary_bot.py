@@ -60,9 +60,5 @@ def main() -> None:
 
     application.add_handler(CommandHandler("when_salary", when_salary))
 
-    # Bind to the port provided by Heroku
-    port = int(os.environ.get("PORT", 80))
-    application.run_polling()
-
 if __name__ == '__main__':
     main()
