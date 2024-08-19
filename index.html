@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"> <!-- Character encoding for the document -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> <!-- Responsive design settings -->
+    <title>Salary Countdown</title> <!-- Title of the webpage -->
+    <style>
+        :root {
+            --primary-color: #3e3e3e; /* Primary color variable */
+            --secondary-color: #666; /* Secondary color variable */
+            --background-color: #f0f0f0; /* Background color variable */
+        }
+
+        body {
+            font-family: 'Roboto', Arial, sans-serif; /* Font settings */
+            text-align: center; /* Center-align text */
+            margin: 0; /* Remove default margin */
+            padding: 0; /* Remove default padding */
+            background-color: var(--background-color); /* Set background color */
+            color: var(--primary-color); /* Set text color */
+        }
+
+        .container {
+            max-width: 90%; /* Maximum width of the container */
+            width: 100%; /* Full width */
+            margin: 0 auto; /* Center the container */
+            padding-top: 40px; /* Add some top padding */
+        }
+
+        h1 {
+            font-size: 1.8rem; /* Font size for the heading */
+            margin-bottom: 20px; /* Space below the heading */
+        }
+
+        #countdown {
+            font-size: 2.2rem; /* Font size for the countdown */
+            font-weight: bold; /* Bold text */
+            margin-bottom: 15px; /* Space below the countdown */
+        }
+
+        #nextSalaryDate {
+            font-size: 1.1rem; /* Font size for the next salary date */
+            color: var(--secondary-color); /* Text color */
+        }
+
+        @media screen and (min-width: 1080px) {
+            .container {
+                max-width: 80%; /* Maximum width for larger screens */
+                padding-top: 60px; /* Increase top padding for larger screens */
+            }
+
+            h1 {
+                font-size: 2.2rem; /* Larger font size for the heading */
+            }
+
+            #countdown {
+                font-size: 2.8rem; /* Larger font size for the countdown */
+            }
+
+            #nextSalaryDate {
+                font-size: 1.3rem; /* Larger font size for the next salary date */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Countdown to Next Salary</h1> <!-- Heading of the page -->
+        <p id="countdown"></p> <!-- Placeholder for the countdown -->
+        <p id="nextSalaryDate"></p> <!-- Placeholder for the next salary date -->
+    </div>
+
+    <script>
+        const countdownElement = document.getElementById('countdown'); // Get the countdown element
+        const nextSalaryDateElement = document.getElementById('nextSalaryDate'); // Get the next salary date element
+
+        function isUkrainianHoliday(date) {
+            // Implement a comprehensive holiday check here
+            return false; // Placeholder return value
+        }
+
+        function getNextSalaryDate(currentDate) {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const day = currentDate.getDate();
+
+            let nextSalary;
+
+            // Determine the next salary date based on the current date
+            if (year < 2024 || (year === 2024 && month < 8) || (year === 2024 && month === 8 && day < 5)) {
+                nextSalary = new Date(2024, 8, 5); // September 5, 2024
+            } else if (year === 2024 && month === 8 && day >= 5) {
+                nextSalary = new Date(2024, 8, 30); // September 30, 2024
+            } else {
+                nextSalary = new Date(year, month, 5);
+                if (currentDate > nextSalary) {
+                    nextSalary.setMonth(nextSalary.getMonth() + 1); // Move to the next month if the date has passed
+                }
+                
+                const quarterEndMonths = [2, 5, 8, 11]; // Months that are quarter ends
+                if (quarterEndMonths.includes(nextSalary.getMonth())) {
+                    nextSalary = new Date(nextSalary.getFullYear(), nextSalary.getMonth() + 1, 0); // Set to the last day of the month
+                } else {
+                    while (nextSalary.getDay() === 0 || nextSalary.getDay() === 6 || isUkrainianHoliday(nextSalary)) {
+                        nextSalary.setDate(nextSalary.getDate() + 1); // Skip weekends and holidays
+                    }
+                }
+            }
+
+            return nextSalary;
+        }
+
+        function updateCountdown() {
+            const now = new Date(); // Get the current date and time
+            const nextSalary = getNextSalaryDate(now); // Get the next salary date
+            const difference = nextSalary - now; // Calculate the difference in milliseconds
+
+            const days = Math.floor(difference / (1000 * 60 * 60 * 24)); // Convert to days
+            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); // Convert to hours
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)); // Convert to minutes
+            const seconds = Math.floor((difference % (1000 * 60)) / 1000); // Convert to seconds
+
+            countdownElement.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`; // Update the countdown text
+            nextSalaryDateElement.textContent = `Next Salary: ${nextSalary.toDateString()}`; // Update the next salary date text
+        }
+
+        setInterval(updateCountdown, 1000); // Update the countdown every second
+        updateCountdown(); // Initial call to set the countdown immediately
+    </script>
+</body>
+</html>
