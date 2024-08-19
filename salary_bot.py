@@ -62,7 +62,7 @@ def main() -> None:
 
     # Bind to the port provided by Heroku
     port = int(os.environ.get("PORT", 80))
-    application.run_polling(port=port)
+    application.run_polling()
 
 if __name__ == '__main__':
     main()
