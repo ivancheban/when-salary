@@ -1,4 +1,5 @@
 import logging
+import os
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
 from datetime import datetime, timedelta
@@ -59,7 +60,9 @@ def main() -> None:
 
     application.add_handler(CommandHandler("when_salary", when_salary))
 
-    application.run_polling()
+    # Bind to the port provided by Heroku
+    port = int(os.environ.get("PORT", 5000))
+    application.run_polling(port=port)
 
 if __name__ == '__main__':
     main()
