@@ -1,1 +1,1 @@
-worker: python salary_bot.py
+web: python salary_bot.py
