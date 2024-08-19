@@ -1,1 +1,1 @@
-"worker: python salary_bot.py" 
+worker: python salary_bot.py
