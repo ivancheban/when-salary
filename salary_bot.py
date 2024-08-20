@@ -1,9 +1,9 @@
 import logging
-import os
 from telegram import Update
-from telegram.ext import Application, CommandHandler, CallbackContext
+from telegram.ext import Application, CommandHandler, CallbackContext, ContextTypes
 from datetime import datetime, timedelta
 import pytz
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 # Enable logging
 logging.basicConfig(
@@ -12,59 +12,42 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Your bot token from BotFather
 TOKEN = '7220529126:AAH7FUyEW7INpuNr_xe_gohNo3rVCrfQh8A'
+CHAT_ID = '-1581609986'  # Replace this with your telegram group chat ID
 
-# Define Kyiv time zone
 KYIV_TZ = pytz.timezone('Europe/Kyiv')
 
 def is_ukrainian_holiday(date):
-    # Implement a comprehensive holiday check here
     return False
 
 def get_next_salary_date(current_date):
-    year = current_date.year
-    month = current_date.month
-    day = current_date.day
+    # (Existing code to determine the next salary date)
 
-    if year < 2024 or (year == 2024 and month < 9) or (year == 2024 and month == 9 and day < 5):
-        next_salary = datetime(2024, 9, 5, tzinfo=KYIV_TZ)
-    elif year == 2024 and month == 9 and day >= 5:
-        next_salary = datetime(2024, 9, 30, tzinfo=KYIV_TZ)
-    else:
-        next_salary = datetime(year, month, 5, tzinfo=KYIV_TZ)
-        if current_date > next_salary:
-            next_salary += timedelta(days=30)
-        
-        quarter_end_months = [2, 5, 8, 11]
-        if next_salary.month in quarter_end_months:
-            next_salary = datetime(next_salary.year, next_salary.month + 1, 1, tzinfo=KYIV_TZ) - timedelta(days=1)
-        else:
-            while next_salary.weekday() >= 5 or is_ukrainian_holiday(next_salary):
-                next_salary += timedelta(days=1)
-
-    return next_salary
-
-async def when_salary(update: Update, context: CallbackContext) -> None:
+def format_salary_details(next_salary):
     now = datetime.now(KYIV_TZ)
-    next_salary = get_next_salary_date(now)
     difference = next_salary - now
-
     days = difference.days
     hours, remainder = divmod(difference.seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
-
     countdown_text = f"{days}d {hours}h {minutes}m {seconds}s"
     next_salary_text = f"Next Salary: {next_salary.strftime('%B %d, %Y')}"
+    return f"Time until next salary: {countdown_text}\n{next_salary_text}"
 
-    await update.message.reply_text(f"Time until next salary: {countdown_text}\n{next_salary_text}")
+async def scheduled_salary_info(context: ContextTypes.DEFAULT_TYPE):
+    now = datetime.now(KYIV_TZ)
+    next_salary = get_next_salary_date(now)
+    message = format_salary_details(next_salary)
+    await context.bot.send_message(chat_id=CHAT_ID, text=message)
 
 def main() -> None:
     application = Application.builder().token(TOKEN).build()
-
     application.add_handler(CommandHandler("when_salary", when_salary))
 
-    # Bind to the port provided by Heroku
+    # Create scheduler to run daily at a specific time (e.g., 9:00 AM Kyiv time)
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(scheduled_salary_info, 'cron', hour=11, minute=23, timezone=KYIV_TZ, args=[application])
+    scheduler.start()
+
     application.run_polling()
 
 if __name__ == '__main__':
