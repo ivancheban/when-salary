@@ -1,2 +1,2 @@
-python-telegram-bot[job_queue]==13.7
+python-telegram-bot[job_queue]==20.0
 pytz==2022.2.1
