@@ -45,7 +45,7 @@ def main() -> None:
 
     # Create scheduler to run daily at a specific time (e.g., 9:00 AM Kyiv time)
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(scheduled_salary_info, 'cron', hour=11, minute=23, timezone=KYIV_TZ, args=[application])
+    scheduler.add_job(scheduled_salary_info, 'cron', hour=11, minute=26, timezone=KYIV_TZ, args=[application])
     scheduler.start()
 
     application.run_polling()
