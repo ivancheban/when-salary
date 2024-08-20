@@ -48,7 +48,7 @@ def schedule_daily_notification(application: Application, chat_id: str) -> None:
     job_queue = application.job_queue
 
     # Schedule the task to run daily at a specific time (e.g., 09:00 AM in Kyiv timezone)
-    target_time = time(hour=11, minute=57, tzinfo=KYIV_TZ)
+    target_time = time(hour=11, minute=59, tzinfo=KYIV_TZ)
     job_queue.run_daily(daily_salary_notification, target_time, context={'chat_id': chat_id})
 
 def main() -> None:
