@@ -55,7 +55,7 @@ async def when_salary(update: Update, context: CallbackContext) -> None:
     minutes, seconds = divmod(remainder, 60)
 
     countdown_text = f"{days}d {hours}h {minutes}m {seconds}s"
-    next_salary_text = f"Next Salary: {next_salary.strftime('%Y-%m-%d')}"
+    next_salary_text = f"Next Salary: {next_salary.strftime('%B %d, %Y')}"
 
     await update.message.reply_text(f"Time until next salary: {countdown_text}\n{next_salary_text}")
 
