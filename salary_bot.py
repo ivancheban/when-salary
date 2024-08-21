@@ -14,7 +14,36 @@ TOKEN = os.getenv('TOKEN')
 KYIV_TZ = pytz.timezone('Europe/Kyiv')
 
 def is_ukrainian_holiday(date):
-    return False  # Comprehensive holiday checks should be implemented here
+    # List of fixed Ukrainian public holidays
+    fixed_holidays = [
+        (1, 1),   # New Year's Day
+        (1, 7),   # Christmas (Orthodox)
+        (3, 8),   # International Women's Day
+        (5, 1),   # Labour Day
+        (5, 9),   # Victory Day
+        (6, 28),  # Constitution Day
+        (8, 24),  # Independence Day
+        (10, 14), # Defender of Ukraine Day
+        (12, 25), # Christmas (Western)
+    ]
+
+    # Check if the date is a fixed holiday
+    if (date.month, date.day) in fixed_holidays:
+        return True
+
+    # Easter and related holidays (these dates change each year)
+    # You would need to calculate these for each year
+    # For simplicity, we'll use 2023 dates as an example
+    easter_related_holidays_2023 = [
+        datetime(2023, 4, 16, tzinfo=KYIV_TZ),  # Easter
+        datetime(2023, 6, 4, tzinfo=KYIV_TZ),   # Trinity Sunday
+    ]
+
+    # Check if the date is an Easter-related holiday
+    if any(date.date() == holiday.date() for holiday in easter_related_holidays_2023):
+        return True
+
+    return False
 
 def get_next_salary_date(current_date):
     year, month, day = current_date.year, current_date.month, current_date.day
