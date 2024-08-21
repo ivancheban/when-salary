@@ -72,7 +72,7 @@ def main():
     application.add_handler(CommandHandler("when_salary", when_salary))
 
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(daily_salary_notification, 'cron', hour=14, minute=18, args=[application, '-1581609986'], timezone=KYIV_TZ)
+    scheduler.add_job(daily_salary_notification, 'cron', hour=14, minute=47, args=[application, '-1581609986'], timezone=KYIV_TZ)
     scheduler.start()
     logger.info("Scheduler started and ready to send messages daily at 14:18 Kyiv time.")
 
