@@ -13,34 +13,43 @@ logger = logging.getLogger(__name__)
 TOKEN = os.getenv('TOKEN')
 KYIV_TZ = pytz.timezone('Europe/Kyiv')
 
+def easter(year):
+    # This is a simplified method to calculate Easter date
+    # For production use, consider using a more accurate algorithm or library
+    a = year % 19
+    b = year // 100
+    c = year % 100
+    d = (19 * a + b - b // 4 - ((b - (b + 8) // 25 + 1) // 3) + 15) % 30
+    e = (32 + 2 * (b % 4) + 2 * (c // 4) - d - (c % 4)) % 7
+    f = d + e - 7 * ((a + 11 * d + 22 * e) // 451) + 114
+    month = f // 31
+    day = f % 31 + 1
+    return datetime(year, month, day, tzinfo=KYIV_TZ)
+
 def is_ukrainian_holiday(date):
     # List of fixed Ukrainian public holidays
     fixed_holidays = [
         (1, 1),   # New Year's Day
-        (1, 7),   # Christmas (Orthodox)
         (3, 8),   # International Women's Day
-        (5, 1),   # Labour Day
-        (5, 9),   # Victory Day
+        (5, 1),   # International Workers' Day
+        (5, 8),   # Day of Remembrance and Victory over Nazism in World War II
         (6, 28),  # Constitution Day
+        (7, 15),  # Statehood Day (since 2023)
         (8, 24),  # Independence Day
-        (10, 14), # Defender of Ukraine Day
-        (12, 25), # Christmas (Western)
+        (10, 1),  # Defenders of Ukraine Day (since 2023)
+        (12, 25), # Christmas
     ]
 
     # Check if the date is a fixed holiday
     if (date.month, date.day) in fixed_holidays:
         return True
 
-    # Easter and related holidays (these dates change each year)
-    # You would need to calculate these for each year
-    # For simplicity, we'll use 2023 dates as an example
-    easter_related_holidays_2023 = [
-        datetime(2023, 4, 16, tzinfo=KYIV_TZ),  # Easter
-        datetime(2023, 6, 4, tzinfo=KYIV_TZ),   # Trinity Sunday
-    ]
+    # Calculate Easter and Pentecost for the given year
+    easter_date = easter(date.year)
+    pentecost_date = easter_date + timedelta(days=49)
 
-    # Check if the date is an Easter-related holiday
-    if any(date.date() == holiday.date() for holiday in easter_related_holidays_2023):
+    # Check if the date is Easter or Pentecost
+    if date.date() in [easter_date.date(), pentecost_date.date()]:
         return True
 
     return False
@@ -108,7 +117,7 @@ def main():
     application.add_handler(CommandHandler("when_salary", when_salary))
 
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(daily_salary_notification, 'cron', hour=10, minute=30, args=[application, '-1001581609986'], timezone=KYIV_TZ)
+    scheduler.add_job(daily_salary_notification, 'cron', hour=16, minute=39, args=[application, '-1001581609986'], timezone=KYIV_TZ)
     scheduler.start()
 
     application.run_polling()

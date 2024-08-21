@@ -31,18 +31,18 @@ The bot considers the following Ukrainian public holidays:
 
 - Fixed dates:
   - January 1: New Year's Day
-  - January 7: Orthodox Christmas
   - March 8: International Women's Day
-  - May 1: Labour Day
-  - May 9: Victory Day
+  - May 1: International Workers' Day
+  - May 8: Day of Remembrance and Victory over Nazism in World War II
   - June 28: Constitution Day
+  - July 15: Statehood Day
   - August 24: Independence Day
-  - October 14: Defender of Ukraine Day
-  - December 25: Western Christmas
+  - October 1: Defenders of Ukraine Day
+  - December 25: Christmas
 
-- Variable dates (example for 2023):
-  - Easter Sunday
-  - Trinity Sunday
+- Variable dates:
+  - Easter Sunday (calculated for each year)
+  - Pentecost (49 days after Easter)
 
 ## Commands
 
@@ -72,4 +72,4 @@ The bot sends daily notifications at 16:39 (Kyiv time) with the countdown to the
 
 ## Note
 
-The calculation of Easter and related holidays is simplified in this version. For production use, consider implementing a more robust method to calculate these dates for each year.
+The calculation of Easter is simplified in this version. For production use, consider implementing a more robust method to calculate this date for each year or use a specialized library.
