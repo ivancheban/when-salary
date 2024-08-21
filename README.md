@@ -4,10 +4,10 @@ This Telegram bot calculates and notifies users about the next salary date, taki
 
 ## Features
 
-- Calculates the next salary date based on current date and specific rules
-- Considers Ukrainian public holidays when determining salary dates
-- Provides a countdown to the next salary date
-- Sends daily notifications about the time remaining until the next salary
+- Calculates the next salary date based on current date and specific rules.
+- Considers Ukrainian public holidays when determining salary dates.
+- Provides a countdown to the next salary date.
+- Sends daily notifications about the time remaining until the next salary.
 
 ## Salary Date Rules
 
