@@ -117,7 +117,7 @@ def main():
     application.add_handler(CommandHandler("when_salary", when_salary))
 
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(daily_salary_notification, 'cron', hour=16, minute=39, args=[application, '-1001581609986'], timezone=KYIV_TZ)
+    scheduler.add_job(daily_salary_notification, 'cron', hour=10, minute=30, args=[application, '-1001581609986'], timezone=KYIV_TZ)
     scheduler.start()
 
     application.run_polling()

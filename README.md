@@ -50,7 +50,7 @@ The bot considers the following Ukrainian public holidays:
 
 ## Scheduled Notifications
 
-The bot sends daily notifications at 16:39 (Kyiv time) with the countdown to the next salary date.
+The bot sends daily notifications at 10:30 (Kyiv time) with the countdown to the next salary date.
 
 ## Technical Details
 
