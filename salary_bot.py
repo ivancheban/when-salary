@@ -1,6 +1,6 @@
 import logging
 from telegram import Update
-from telegram.ext import Application, CommandHandler, CallbackContext
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 from datetime import datetime, timedelta
 import pytz
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -13,8 +13,7 @@ TOKEN = '7220529126:AAH7FUyEW7INpuNr_xe_gohNo3rVCrfQh8A'
 KYIV_TZ = pytz.timezone('Europe/Kyiv')
 
 def is_ukrainian_holiday(date):
-    # Comprehensive holiday checks should be implemented here
-    return False  # Example
+    return False  # Implement actual holiday logic here
 
 def get_next_salary_date(current_date):
     year, month, day = current_date.year, current_date.month, current_date.day
@@ -67,14 +66,19 @@ async def daily_salary_notification(context: CallbackContext, chat_id: str) -> N
     except Exception as e:
         logger.error(f"Failed to send message: {str(e)}")
 
+def echo_chat_id(update: Update, context: CallbackContext) -> None:
+    """Echo the chat ID for debugging or setup purposes."""
+    chat_id = update.effective_chat.id
+    context.bot.send_message(chat_id=chat_id, text=f"Chat ID: {chat_id}")
+
 def main():
     application = Application.builder().token(TOKEN).build()
     application.add_handler(CommandHandler("when_salary", when_salary))
+    application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, echo_chat_id))  # Echo chat ID for any non-command message
 
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(daily_salary_notification, 'cron', hour=14, minute=47, args=[application, '-1581609986'], timezone=KYIV_TZ)
+    scheduler.add_job(daily_salary_notification, 'cron', hour=14, minute=59, args=[application, '-1581609986'], timezone=KYIV_TZ)
     scheduler.start()
-    logger.info("Scheduler started and ready to send messages daily at 14:18 Kyiv time.")
 
     application.run_polling()
 
