@@ -62,7 +62,7 @@ async def when_salary(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text(f"Time until next salary: {countdown_text}\n{next_salary_text}")
 
 def schedule_daily_notification(application, chat_id):
-    target_time = time(14, 12, tzinfo=KYIV_TZ)  # 1:55 PM Kyiv time
+    target_time = time(14, 18, tzinfo=KYIV_TZ)  # 2:12 PM Kyiv time
     application.job_queue.run_daily(lambda ctx: daily_salary_notification(ctx, chat_id), target_time)
 
 async def daily_salary_notification(context: CallbackContext, chat_id: str) -> None:
