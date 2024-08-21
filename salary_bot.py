@@ -47,6 +47,7 @@ def is_ukrainian_holiday(date):
 
 def get_next_salary_date(current_date):
     year, month, day = current_date.year, current_date.month, current_date.day
+    
     if year < 2024 or (year == 2024 and month < 9) or (year == 2024 and month == 9 and day < 5):
         next_salary = datetime(2024, 9, 5, tzinfo=KYIV_TZ)
     elif year == 2024 and month == 9 and day >= 5:
@@ -54,13 +55,19 @@ def get_next_salary_date(current_date):
     else:
         next_salary = datetime(year, month, 5, tzinfo=KYIV_TZ)
         if current_date > next_salary:
-            next_salary += timedelta(days=30)
-        quarter_end_months = [2, 5, 8, 11]
+            if month == 12:
+                next_salary = datetime(year + 1, 1, 5, tzinfo=KYIV_TZ)
+            else:
+                next_salary = datetime(year, month + 1, 5, tzinfo=KYIV_TZ)
+        
+        quarter_end_months = [3, 6, 9, 12]
         if next_salary.month in quarter_end_months:
-            next_salary = datetime(next_salary.year, next_salary.month + 1, 1, tzinfo=KYIV_TZ) - timedelta(days=1)
+            next_salary = datetime(next_salary.year, next_salary.month, 1, tzinfo=KYIV_TZ) + timedelta(days=32)
+            next_salary = next_salary.replace(day=1) - timedelta(days=1)
         else:
             while next_salary.weekday() >= 5 or is_ukrainian_holiday(next_salary):
-                next_salary += timedelta(days=1)
+                next_salary -= timedelta(days=1)
+    
     return next_salary
 
 async def when_salary(update: Update, context: CallbackContext) -> None:
