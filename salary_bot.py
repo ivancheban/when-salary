@@ -82,7 +82,7 @@ def main() -> None:
     application.add_handler(CommandHandler("when_salary", when_salary))
 
     # Schedule the publish_salary_info function to run at 10:30 AM every day
-    schedule.every().day.at("13:50").do(lambda: application.run_task(publish_salary_info))
+    schedule.every().day.at("13:55").do(lambda: application.run_task(publish_salary_info))
 
     # Bind to the port provided by Heroku
     application.run_polling()
