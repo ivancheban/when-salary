@@ -77,7 +77,7 @@ def main():
     application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, echo_chat_id))  # Echo chat ID for any non-command message
 
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(daily_salary_notification, 'cron', hour=14, minute=59, args=[application, '-1581609986'], timezone=KYIV_TZ)
+    scheduler.add_job(daily_salary_notification, 'cron', hour=14, minute=59, args=[application, '-1001581609986'], timezone=KYIV_TZ)
     scheduler.start()
 
     application.run_polling()
