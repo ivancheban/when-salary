@@ -3,24 +3,20 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
 from datetime import datetime, timedelta, time as dt_time
 import pytz
-import schedule
-import time
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 # Enable logging
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Your bot token from BotFather
+# Bot Token
 TOKEN = '7220529126:AAH7FUyEW7INpuNr_xe_gohNo3rVCrfQh8A'
 
-# Define Kyiv time zone
+# Kyiv Timezone
 KYIV_TZ = pytz.timezone('Europe/Kyiv')
 
 def is_ukrainian_holiday(date):
-    # Implement a comprehensive holiday check here
+    # Implement a comprehensive holiday check here (Currently it assumes there are no holidays)
     return False
 
 def get_next_salary_date(current_date):
@@ -52,19 +48,28 @@ async def when_salary(update: Update, context: CallbackContext) -> None:
     next_salary_text = f"Next Salary: {next_salary.strftime('%B %d, %Y')}"
     await update.message.reply_text(f"Time until next salary: {countdown_text}\n{next_salary_text}")
 
-def schedule_daily_notification(application, chat_id):
-    target_time = dt_time(hour=14, minute=30, tzinfo=KYIV_TZ)
-    # Since the job_queue is not available in Application, this functionality is not directly applicable.
-    # Alternative approaches like using APScheduler should be considered.
+async def daily_salary_notification(context: CallbackContext, chat_id: str) -> None:
+    logger.info("Executing scheduled job...")
+    now = datetime.now(KYIV_TZ)
+    next_salary = get_next_salary_date(now)
+    difference = next_salary - now
+    days = difference.days
+    hours, remainder = divmod(difference.seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    countdown_text = f"{days}d {hours}h {minutes}m {seconds}s"
+    next_salary_text = f"Next Salary: {next_salary.strftime('%B %d, %Y')}"
+    await context.bot.send_message(chat_id=chat_id, text=f"Time until next salary: {countdown_text}\n{next_salary_text}")
 
-def main() -> None:
+def main():
     application = Application.builder().token(TOKEN).build()
     application.add_handler(CommandHandler("when_salary", when_salary))
+
+    # Setup APScheduler for scheduling daily notifications
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(daily_salary_notification, 'cron', hour=14, minute=18, args=[application, '-1581609986'], timezone=KYIV_TZ)
+    scheduler.start()
+
     application.run_polling()
-    # In the event that you end up not using schedule or APScheduler, this loop can be omitted.
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
 
 if __name__ == '__main__':
     main()
