@@ -6,73 +6,93 @@ from datetime import datetime, timedelta
 import pytz
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-# Enable detailed logging
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 TOKEN = os.getenv('TOKEN')
 KYIV_TZ = pytz.timezone('Europe/Kyiv')
+CHAT_ID = '-1001581609986'
+
+def easter_date(year):
+    a = year % 19
+    b = year // 100
+    c = year % 100
+    d = b // 4
+    e = b % 4
+    f = (b + 8) // 25
+    g = (b - f + 1) // 3
+    h = (19 * a + b - d - g + 15) % 30
+    i = c // 4
+    k = c % 4
+    l = (32 + 2 * e + 2 * i - h - k) % 7
+    m = (a + 11 * h + 22 * l) // 451
+    month = (h + l - 7 * m + 114) // 31
+    day = ((h + l - 7 * m + 114) % 31) + 1
+    return datetime(year, month, day, tzinfo=KYIV_TZ)
 
 def is_ukrainian_holiday(date):
-    return False  # Comprehensive holiday checks should be implemented here
+    year = date.year
+    easter = easter_date(year)
+
+    fixed_holidays = [
+        (1, 1),   # New Year's Day
+        (1, 7),   # Orthodox Christmas
+        (3, 8),   # International Women's Day
+        (5, 1),   # Labour Day
+        (5, 9),   # Victory Day
+        (6, 28),  # Constitution Day
+        (8, 24),  # Independence Day
+        (10, 14), # Defender of Ukraine Day
+        (12, 25), # Catholic Christmas
+    ]
+
+    variable_holidays = [
+        easter - timedelta(days=2),                    # Good Friday
+        easter + timedelta(days=1),                    # Easter Monday
+        easter + timedelta(days=49),                   # Trinity Sunday
+        datetime(year, 5, 1, tzinfo=KYIV_TZ).replace(day=1) + timedelta(days=7 - datetime(year, 5, 1).weekday()), # Day of Memory and Reconciliation (first Sunday of May)
+        datetime(year, 10, 1, tzinfo=KYIV_TZ).replace(day=1) + timedelta(days=(6 - datetime(year, 10, 1).weekday()) % 7), # Teacher's Day (first Sunday of October)
+    ]
+
+    return (date.month, date.day) in fixed_holidays or date in variable_holidays
 
 def get_next_salary_date(current_date):
-    year, month, day = current_date.year, current_date.month, current_date.day
-    if year < 2024 or (year == 2024 and month < 9) or (year == 2024 and month == 9 and day < 5):
-        next_salary = datetime(2024, 9, 5, tzinfo=KYIV_TZ)
-    elif year == 2024 and month == 9 and day >= 5:
-        next_salary = datetime(2024, 9, 30, tzinfo=KYIV_TZ)
+    year, month = current_date.year, current_date.month
+    if month in [3, 6, 9, 12]:  # Quarter end
+        next_salary = datetime(year, month, 1, tzinfo=KYIV_TZ) + timedelta(days=32)
+        next_salary = next_salary.replace(day=1) - timedelta(days=1)
     else:
         next_salary = datetime(year, month, 5, tzinfo=KYIV_TZ)
         if current_date > next_salary:
-            next_salary += timedelta(days=30)
-        quarter_end_months = [2, 5, 8, 11]
-        if next_salary.month in quarter_end_months:
-            next_salary = datetime(next_salary.year, next_salary.month + 1, 1, tzinfo=KYIV_TZ) - timedelta(days=1)
-        else:
-            while next_salary.weekday() >= 5 or is_ukrainian_holiday(next_salary):
-                next_salary += timedelta(days=1)
+            next_salary = next_salary.replace(month=month+1)
+
+    while next_salary.weekday() >= 5 or is_ukrainian_holiday(next_salary):
+        next_salary -= timedelta(days=1)
+    
     return next_salary
 
-async def when_salary(update: Update, context: CallbackContext) -> None:
-    now = datetime.now(KYIV_TZ)
-    next_salary = get_next_salary_date(now)
-    difference = next_salary - now
-
-    days = difference.days
-    hours, remainder = divmod(difference.seconds, 3600)
-    minutes, seconds = divmod(remainder, 60)
-
-    countdown_text = f"{days}d {hours}h {minutes}m {seconds}s"
-    next_salary_text = f"Next Salary: {next_salary.strftime('%B %d, %Y')}"
-
-    await update.message.reply_text(f"Time until next salary: {countdown_text}\n{next_salary_text}")
-
-async def daily_salary_notification(context: CallbackContext, chat_id: str) -> None:
+async def send_salary_countdown(context: CallbackContext, chat_id: str) -> None:
     try:
-        logger.info("Executing scheduled job...")
         now = datetime.now(KYIV_TZ)
         next_salary = get_next_salary_date(now)
         difference = next_salary - now
 
         days = difference.days
         hours, remainder = divmod(difference.seconds, 3600)
-        minutes, seconds = divmod(remainder, 60)
+        minutes, _ = divmod(remainder, 60)
 
-        countdown_text = f"{days}d {hours}h {minutes}m {seconds}s"
+        countdown_text = f"{days}d {hours}h {minutes}m"
         next_salary_text = f"Next Salary: {next_salary.strftime('%B %d, %Y')}"
 
-        response = await context.bot.send_message(chat_id=chat_id, text=f"Time until next salary: {countdown_text}\n{next_salary_text}")
-        logger.info(f"Message sent with message id {response.message_id}")
+        await context.bot.send_message(chat_id=chat_id, text=f"Time until next salary: {countdown_text}\n{next_salary_text}")
     except Exception as e:
         logger.error(f"Failed to send message: {str(e)}")
 
 def main():
     application = Application.builder().token(TOKEN).build()
-    application.add_handler(CommandHandler("when_salary", when_salary))
 
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(daily_salary_notification, 'cron', hour=16, minute=39, args=[application, '-1001581609986'], timezone=KYIV_TZ)
+    scheduler.add_job(send_salary_countdown, 'cron', hour=16, minute=39, args=[application, CHAT_ID], timezone=KYIV_TZ)
     scheduler.start()
 
     application.run_polling()
