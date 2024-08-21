@@ -64,9 +64,9 @@ def get_next_salary_date(current_date):
         if next_salary.month in quarter_end_months:
             next_salary = datetime(next_salary.year, next_salary.month, 1, tzinfo=KYIV_TZ) + timedelta(days=32)
             next_salary = next_salary.replace(day=1) - timedelta(days=1)
-        else:
-            while next_salary.weekday() >= 5 or is_ukrainian_holiday(next_salary):
-                next_salary -= timedelta(days=1)
+        
+        while next_salary.weekday() >= 5 or is_ukrainian_holiday(next_salary):
+            next_salary -= timedelta(days=1)
     
     return next_salary
 
@@ -108,7 +108,7 @@ def main():
     application.add_handler(CommandHandler("when_salary", when_salary))
 
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(daily_salary_notification, 'cron', hour=16, minute=39, args=[application, '-1001581609986'], timezone=KYIV_TZ)
+    scheduler.add_job(daily_salary_notification, 'cron', hour=10, minute=30, args=[application, '-1001581609986'], timezone=KYIV_TZ)
     scheduler.start()
 
     application.run_polling()

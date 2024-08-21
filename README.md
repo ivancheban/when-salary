@@ -19,10 +19,11 @@ This Telegram bot calculates and notifies users about the next salary date, taki
    - If current date is September 5 or later, next salary is September 30, 2024
 
 3. After September 2024:
-   - Salary is generally paid on the 5th of each month
-   - If the 5th has passed, it's scheduled for the 5th of the next month
-   - For quarter-end months (February, May, August, November), salary is paid on the last day of the month
-   - If the salary date falls on a weekend or public holiday, it's moved to the next working day
+   - For non-quarter-end months:
+     - Salary is generally paid on the 5th of each month
+   - For quarter-end months (March, June, September, December):
+     - Salary is paid on the last day of the month
+   - If the salary date (either the 5th or the last day of a quarter-end month) falls on a weekend or public holiday, it's moved to the previous working day
 
 ## Ukrainian Public Holidays
 
