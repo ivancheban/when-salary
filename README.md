@@ -67,7 +67,7 @@ The bot sends daily notifications at 16:39 (Kyiv time) with the countdown to the
 3. Set the `TOKEN` environment variable with your Telegram bot token
 4. Run the script:
 
-    `python bot.py`
+    `python salary_bot.py`
 
 ## Note
 
