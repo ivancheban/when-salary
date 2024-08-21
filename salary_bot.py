@@ -2,7 +2,7 @@ import logging
 import os
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 import pytz
 import schedule
 import time
@@ -61,7 +61,11 @@ async def when_salary(update: Update, context: CallbackContext) -> None:
 
     await update.message.reply_text(f"Time until next salary: {countdown_text}\n{next_salary_text}")
 
-async def publish_salary_info(context: CallbackContext) -> None:
+def schedule_daily_notification(application, chat_id):
+    target_time = time(14, 12, tzinfo=KYIV_TZ)  # 1:55 PM Kyiv time
+    application.job_queue.run_daily(lambda ctx: daily_salary_notification(ctx, chat_id), target_time)
+
+async def daily_salary_notification(context: CallbackContext, chat_id: str) -> None:
     now = datetime.now(KYIV_TZ)
     next_salary = get_next_salary_date(now)
     difference = next_salary - now
@@ -73,16 +77,15 @@ async def publish_salary_info(context: CallbackContext) -> None:
     countdown_text = f"{days}d {hours}h {minutes}m {seconds}s"
     next_salary_text = f"Next Salary: {next_salary.strftime('%B %d, %Y')}"
 
-    # Replace 'your_telegram_group_id' with the actual group ID you want to send the message to
-    await context.bot.send_message(chat_id='-1581609986', text=f"Time until next salary: {countdown_text}\n{next_salary_text}")
+    await context.bot.send_message(chat_id=chat_id, text=f"Time until next salary: {countdown_text}\n{next_salary_text}")
 
 def main() -> None:
     application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("when_salary", when_salary))
 
-    # Schedule the publish_salary_info function to run at 10:30 AM every day
-    schedule.every().day.at("13:55").do(lambda: application.run_task(publish_salary_info))
+    # Replace 'your_telegram_group_id' with the actual group ID you want to send the message to
+    schedule_daily_notification(application, '-1581609986')
 
     # Bind to the port provided by Heroku
     application.run_polling()
