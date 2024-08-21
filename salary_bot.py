@@ -66,7 +66,7 @@ def main():
 
     # Setup APScheduler for scheduling daily notifications
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(daily_salary_notification, 'cron', hour=14, minute=18, args=[application, '-1581609986'], timezone=KYIV_TZ)
+    scheduler.add_job(daily_salary_notification, 'cron', hour=14, minute=38, args=[application, '-1581609986'], timezone=KYIV_TZ)
     scheduler.start()
 
     application.run_polling()
