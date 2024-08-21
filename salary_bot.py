@@ -1,23 +1,20 @@
 import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
-from datetime import datetime, timedelta, time as dt_time
+from datetime import datetime, timedelta
 import pytz
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-# Enable logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+# Enable detailed logging
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Bot Token
 TOKEN = '7220529126:AAH7FUyEW7INpuNr_xe_gohNo3rVCrfQh8A'
-
-# Kyiv Timezone
 KYIV_TZ = pytz.timezone('Europe/Kyiv')
 
 def is_ukrainian_holiday(date):
-    # Implement a comprehensive holiday check here (Currently it assumes there are no holidays)
-    return False
+    # Comprehensive holiday checks should be implemented here
+    return False  # Example
 
 def get_next_salary_date(current_date):
     year, month, day = current_date.year, current_date.month, current_date.day
@@ -41,33 +38,43 @@ async def when_salary(update: Update, context: CallbackContext) -> None:
     now = datetime.now(KYIV_TZ)
     next_salary = get_next_salary_date(now)
     difference = next_salary - now
+
     days = difference.days
     hours, remainder = divmod(difference.seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
+
     countdown_text = f"{days}d {hours}h {minutes}m {seconds}s"
     next_salary_text = f"Next Salary: {next_salary.strftime('%B %d, %Y')}"
+
     await update.message.reply_text(f"Time until next salary: {countdown_text}\n{next_salary_text}")
 
 async def daily_salary_notification(context: CallbackContext, chat_id: str) -> None:
-    logger.info("Executing scheduled job...")
-    now = datetime.now(KYIV_TZ)
-    next_salary = get_next_salary_date(now)
-    difference = next_salary - now
-    days = difference.days
-    hours, remainder = divmod(difference.seconds, 3600)
-    minutes, seconds = divmod(remainder, 60)
-    countdown_text = f"{days}d {hours}h {minutes}m {seconds}s"
-    next_salary_text = f"Next Salary: {next_salary.strftime('%B %d, %Y')}"
-    await context.bot.send_message(chat_id=chat_id, text=f"Time until next salary: {countdown_text}\n{next_salary_text}")
+    try:
+        logger.info("Executing scheduled job...")
+        now = datetime.now(KYIV_TZ)
+        next_salary = get_next_salary_date(now)
+        difference = next_salary - now
+
+        days = difference.days
+        hours, remainder = divmod(difference.seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+
+        countdown_text = f"{days}d {hours}h {minutes}m {seconds}s"
+        next_salary_text = f"Next Salary: {next_salary.strftime('%B %d, %Y')}"
+
+        response = await context.bot.send_message(chat_id=chat_id, text=f"Time until next salary: {countdown_text}\n{next_salary_text}")
+        logger.info(f"Message sent with message id {response.message_id}")
+    except Exception as e:
+        logger.error(f"Failed to send message: {str(e)}")
 
 def main():
     application = Application.builder().token(TOKEN).build()
     application.add_handler(CommandHandler("when_salary", when_salary))
 
-    # Setup APScheduler for scheduling daily notifications
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(daily_salary_notification, 'cron', hour=14, minute=38, args=[application, '-1581609986'], timezone=KYIV_TZ)
+    scheduler.add_job(daily_salary_notification, 'cron', hour=14, minute=18, args=[application, '-1581609986'], timezone=KYIV_TZ)
     scheduler.start()
+    logger.info("Scheduler started and ready to send messages daily at 14:18 Kyiv time.")
 
     application.run_polling()
 
