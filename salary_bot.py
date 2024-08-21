@@ -25,8 +25,27 @@ def is_ukrainian_holiday(date):
     return False
 
 def get_next_salary_date(current_date):
-    # Your existing get_next_salary_date function
-    # ...
+    year = current_date.year
+    month = current_date.month
+    day = current_date.day
+
+    if year < 2024 or (year == 2024 and month < 9) or (year == 2024 and month == 9 and day < 5):
+        next_salary = datetime(2024, 9, 5, tzinfo=KYIV_TZ)
+    elif year == 2024 and month == 9 and day >= 5:
+        next_salary = datetime(2024, 9, 30, tzinfo=KYIV_TZ)
+    else:
+        next_salary = datetime(year, month, 5, tzinfo=KYIV_TZ)
+        if current_date > next_salary:
+            next_salary += timedelta(days=30)
+        
+        quarter_end_months = [2, 5, 8, 11]
+        if next_salary.month in quarter_end_months:
+            next_salary = datetime(next_salary.year, next_salary.month + 1, 1, tzinfo=KYIV_TZ) - timedelta(days=1)
+        else:
+            while next_salary.weekday() >= 5 or is_ukrainian_holiday(next_salary):
+                next_salary += timedelta(days=1)
+
+    return next_salary
 
 async def when_salary(update: Update, context: CallbackContext) -> None:
     now = datetime.now(KYIV_TZ)
@@ -63,7 +82,7 @@ def main() -> None:
     application.add_handler(CommandHandler("when_salary", when_salary))
 
     # Schedule the publish_salary_info function to run at 10:30 AM every day
-    schedule.every().day.at("13:44").do(lambda: application.run_task(publish_salary_info))
+    schedule.every().day.at("13:50").do(lambda: application.run_task(publish_salary_info))
 
     # Bind to the port provided by Heroku
     application.run_polling()
