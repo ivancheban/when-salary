@@ -79,35 +79,39 @@ def get_next_salary_date(current_date):
     
     return next_salary
 
-async def when_salary(update: Update, context: CallbackContext) -> None:
-    now = datetime.now(KYIV_TZ)
-    next_salary = get_next_salary_date(now)
+def get_salary_message(now, next_salary):
     difference = next_salary - now
-
     days = difference.days
     hours, remainder = divmod(difference.seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
 
-    countdown_text = f"{days}d {hours}h {minutes}m {seconds}s"
-    next_salary_text = f"Next Salary: {next_salary.strftime('%B %d, %Y')}"
+    if days == 0 and hours == 0 and minutes == 0:
+        return "🎉🎊 It's Salary Day! 💰💸 Enjoy your well-earned money! 🥳🍾"
+    elif days == 1:
+        return "⏰ Only 1 day left until Salary Day! 💰 Get ready to celebrate! 🎉"
+    elif days == 2:
+        return "🗓 2 days to go until Salary Day! 💼 The wait is almost over! 😊"
+    elif days == 3:
+        return "📅 3 days remaining until Salary Day! 💰 It's getting closer! 🙌"
+    else:
+        countdown_text = f"{days}d {hours}h {minutes}m {seconds}s"
+        next_salary_text = f"Next Salary: {next_salary.strftime('%B %d, %Y')}"
+        return f"⏳ Time until next salary: {countdown_text}\n📆 {next_salary_text}"
 
-    await update.message.reply_text(f"Time until next salary: {countdown_text}\n{next_salary_text}")
+async def when_salary(update: Update, context: CallbackContext) -> None:
+    now = datetime.now(KYIV_TZ)
+    next_salary = get_next_salary_date(now)
+    message = get_salary_message(now, next_salary)
+    await update.message.reply_text(message)
 
 async def daily_salary_notification(context: CallbackContext, chat_id: str) -> None:
     try:
         logger.info("Executing scheduled job...")
         now = datetime.now(KYIV_TZ)
         next_salary = get_next_salary_date(now)
-        difference = next_salary - now
+        message = get_salary_message(now, next_salary)
 
-        days = difference.days
-        hours, remainder = divmod(difference.seconds, 3600)
-        minutes, seconds = divmod(remainder, 60)
-
-        countdown_text = f"{days}d {hours}h {minutes}m {seconds}s"
-        next_salary_text = f"Next Salary: {next_salary.strftime('%B %d, %Y')}"
-
-        response = await context.bot.send_message(chat_id=chat_id, text=f"Time until next salary: {countdown_text}\n{next_salary_text}")
+        response = await context.bot.send_message(chat_id=chat_id, text=message)
         logger.info(f"Message sent with message id {response.message_id}")
     except Exception as e:
         logger.error(f"Failed to send message: {str(e)}")
